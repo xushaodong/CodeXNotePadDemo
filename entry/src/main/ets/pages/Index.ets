@@ -28,6 +28,10 @@ struct Index {
     this.showEditor = true
   }
 
+  private closeEditor(): void {
+    this.showEditor = false
+  }
+
   private saveEditor(): void {
     if (this.editingId) {
       this.viewModel.updateNote(this.editingId, this.inputTitle, this.inputContent, this.inputCategory)
@@ -39,13 +43,12 @@ struct Index {
 
   @Builder
   private CategoryChip(category: NoteCategory) {
-    const isSelected: boolean = this.viewModel.selectedCategory === category
     Text(category)
       .fontSize(14)
-      .fontWeight(isSelected ? FontWeight.Bold : FontWeight.Regular)
-      .fontColor(isSelected ? '#0A59F7' : '#3D4656')
+      .fontWeight(this.viewModel.selectedCategory === category ? FontWeight.Bold : FontWeight.Regular)
+      .fontColor(this.viewModel.selectedCategory === category ? '#0A59F7' : '#3D4656')
       .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-      .backgroundColor(isSelected ? '#E7F0FF' : '#F3F5F7')
+      .backgroundColor(this.viewModel.selectedCategory === category ? '#E7F0FF' : '#F3F5F7')
       .borderRadius(16)
       .onClick(() => {
         this.viewModel.selectedCategory = category
@@ -136,13 +139,16 @@ struct Index {
           .width('100%')
           .textAlign(TextAlign.Start)
 
-        TextInput({ placeholder: '搜索标题或正文', text: $$this.viewModel.keyword })
+        TextInput({ placeholder: '搜索标题或正文', text: this.viewModel.keyword })
           .height(44)
           .backgroundColor('#FFFFFF')
           .borderRadius(12)
           .fontSize(15)
+          .onChange((value: string) => {
+            this.viewModel.keyword = value
+          })
 
-        Scroll({ scrollBar: BarState.Off, scrollable: true }) {
+        Scroll() {
           Row({ space: 10 }) {
             ForEach(this.categories, (category: NoteCategory) => {
               this.CategoryChip(category)
@@ -189,12 +195,18 @@ struct Index {
         .backgroundColor('#0A59F7')
         .fontColor('#FFFFFF')
         .onClick(() => this.openEditor())
+
+      if (this.showEditor) {
+        Column() {
+          Blank()
+          this.EditorSheet()
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#66000000')
+        .onClick(() => this.closeEditor())
+      }
     }
-    .bindSheet($$this.showEditor, this.EditorSheet(), {
-      height: 0.75,
-      dragBar: true,
-      detents: [SheetSize.FIT_CONTENT, SheetSize.LARGE]
-    })
   }
 
   @Builder
@@ -205,25 +217,30 @@ struct Index {
         .fontWeight(FontWeight.Bold)
         .width('100%')
 
-      TextInput({ placeholder: '标题', text: $$this.inputTitle })
+      TextInput({ placeholder: '标题', text: this.inputTitle })
         .height(44)
         .backgroundColor('#F3F5F7')
         .borderRadius(10)
+        .onChange((value: string) => {
+          this.inputTitle = value
+        })
 
-      TextArea({ placeholder: '输入内容...', text: $$this.inputContent })
+      TextArea({ placeholder: '输入内容...', text: this.inputContent })
         .height(180)
         .backgroundColor('#F3F5F7')
         .borderRadius(10)
+        .onChange((value: string) => {
+          this.inputContent = value
+        })
 
       Row({ space: 8 }) {
         ForEach([NoteCategory.WORK, NoteCategory.LIFE, NoteCategory.IDEA], (category: NoteCategory) => {
-          const selected: boolean = this.inputCategory === category
           Text(category)
             .fontSize(13)
-            .fontWeight(selected ? FontWeight.Medium : FontWeight.Regular)
-            .fontColor(selected ? '#0A59F7' : '#3D4656')
+            .fontWeight(this.inputCategory === category ? FontWeight.Medium : FontWeight.Regular)
+            .fontColor(this.inputCategory === category ? '#0A59F7' : '#3D4656')
             .padding({ left: 12, right: 12, top: 7, bottom: 7 })
-            .backgroundColor(selected ? '#EAF2FF' : '#F3F5F7')
+            .backgroundColor(this.inputCategory === category ? '#EAF2FF' : '#F3F5F7')
             .borderRadius(12)
             .onClick(() => {
               this.inputCategory = category
@@ -239,7 +256,7 @@ struct Index {
           .backgroundColor('#F3F5F7')
           .fontColor('#3D4656')
           .onClick(() => {
-            this.showEditor = false
+            this.closeEditor()
           })
         Button('保存')
           .layoutWeight(1)
@@ -253,5 +270,8 @@ struct Index {
     .width('100%')
     .padding(16)
     .backgroundColor('#FFFFFF')
+    .borderRadius({ topLeft: 20, topRight: 20 })
+    .onClick(() => {
+    })
   }
 }
